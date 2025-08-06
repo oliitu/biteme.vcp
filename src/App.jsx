@@ -325,7 +325,17 @@ cart={cart}
       <h2 className="text-3xl font-bold text-orange-950 mb-1 lg:mb-2">¡Ya casi!</h2> 
       <div className="bg-[#fff8de] border-2 border-yellow-900 rounded-lg px-4 py-3 my-4 shadow-sm text-left">
   <p className="text-orange-950 text-lg mb-1">Transferí al siguiente alias:</p>
-  <p className="text-2xl font-bold text-yellow-900 tracking-wide">biteme.vcp</p>
+  <button
+  onClick={() => {
+    navigator.clipboard.writeText("biteme.vcp");
+    setToast("Alias copiado 📋");
+  }}
+  className="text-2xl font-bold text-yellow-900 tracking-wide hover:underline focus:outline-none"
+  title="Copiar alias"
+>
+  biteme.vcp
+</button>
+
   <p className="text-orange-950 text-base mt-2">Titular: <span className="font-semibold">Olivia Iturrusgarai Ballés</span></p>
 </div>
 
