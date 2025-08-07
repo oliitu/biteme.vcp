@@ -6,9 +6,14 @@ import AccesoPedidos from "./components/AccesoPedidos";
 import FormularioResena from './components/FormularioResena';
 import{db as cookiesData } from './data/db'
 import './App.css'
-import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { collection, addDoc, Timestamp, doc, setDoc, increment } from "firebase/firestore";
 import { db } from "./firebase";
 import Carrito from './components/Carrito';
+import ModalPedido from "./components/ModalPedido";
+import ModalWhatsApp from './components/ModalWhatsApp';
+import Toast from './components/Toast';
+
+
 
 function App() {
   const [clienteNombre, setClienteNombre] = useState('');
@@ -49,8 +54,7 @@ const obtenerLinkWhatsApp = () => {
   return `https://wa.me/5493541396868?text=${encodeURIComponent(mensaje)}`;
 };
 
-
- const confirmarPedido = async () => {
+const confirmarPedido = async () => {
   if (!cart.length || isNaN(cartTotal)) {
     setToast("Error: carrito vacío o total inválido");
     return;
@@ -88,11 +92,34 @@ const obtenerLinkWhatsApp = () => {
     setCart([]);
     setClienteNombre('');
 
+    // ✅ Calcular totales por chica
+    let totalAgus = 0;
+    let totalOli = 0;
+    let totalGuada = 0;
+
+    cart.forEach(item => {
+      const subtotal = item.price * item.quantity;
+      if (item.id === 1 || item.id === 5) totalAgus += subtotal;
+      if (item.id === 2 || item.id === 3) totalOli += subtotal;
+      if (item.id === 4 || item.id === 6) totalGuada += subtotal;
+    });
+
+    // ✅ Sumar a Firestore usando setDoc con merge: true
+    const totalesRef = collection(db, "totalesPorChica");
+
+    if (totalAgus > 0) {
+      await setDoc(doc(totalesRef, "agus"), { [metodoPago]: increment(totalAgus) }, { merge: true });
+    }
+    if (totalOli > 0) {
+      await setDoc(doc(totalesRef, "oli"), { [metodoPago]: increment(totalOli) }, { merge: true });
+    }
+    if (totalGuada > 0) {
+      await setDoc(doc(totalesRef, "guada"), { [metodoPago]: increment(totalGuada) }, { merge: true });
+    }
+
     if (metodoPago === "efectivo") {
-      // No mostrar modal de WhatsApp
       setMostrarModalResena(true);
     } else {
-      // Solo mostrar botón de WhatsApp si es mercado pago
       setMostrarBotonWhatsApp(true);
     }
   } catch (error) {
@@ -186,10 +213,9 @@ const obtenerLinkWhatsApp = () => {
 
   const cartTotal = useMemo(() => {
   const totalCantidad = cart.reduce((sum, item) => sum + item.quantity, 0);
-  console.log(totalCantidad)
   // Si hay exactamente 5 cookies, precio promocional
-  if (totalCantidad === 5) {
-    return 4000;
+  if (totalCantidad === 3) {
+    return 6000;
   }
 
   // Sino, calcular normalmente
@@ -221,7 +247,7 @@ cart={cart}
       <section  className="align-items-center pt-10 lg:pt-20 pb-4 lg:pb-16 px-6">
   <div className="max-w-6xl mx-auto text-center mb-7 lg:mb-13">
     <h2 className="text-3xl md:text-5xl lg:text-7xl font-pacifico text-orange-950 mb-2 lg:mb-5">Nuestras Cookies</h2>
-    <p className="text-lg lg:text-xl font-poppins text-orange-950">Elegí tu favorita y llevate 5 por $4000</p>
+    <p className="text-lg lg:text-xl font-poppins text-orange-950">Elegí tu favorita y llevate 3 por $6000</p>
   </div>
 
   <div className="grid grid-cols-2  md:grid-cols-3 lg:grid-cols-3  lg:gap-y-10 lg:gap-x-8 gap-2  sm:gap-y-3 md:m-1 sm:mx-4 justify-items-center lg:mx-12">
@@ -236,152 +262,30 @@ cart={cart}
   </div>
 </section>
 
-{mostrarModal && (
-  <div className="fixed inset-0 z-50 backdrop-blur-sm bg-yellow-950/35 flex items-center justify-center">
-    <div className="bg-amber-100 rounded-xl pt-12  px-6 pb-6 w-11/12 max-w-md text-center shadow-lg relative">
-    <motion.button
-  whileTap={{ scale: 0.95 }}
-  onClick={() => setMostrarModal(false)}
-  className="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-full hover:bg-red-800 transition"
->
-  X
-</motion.button>
-
-     <h2 className="text-2xl font-bold text-orange-950 mb-4">
-  Total a pagar: <span className="text-[#6e3712]">${cartTotal}</span>
-</h2>
-
-
-<input
-  type="text"
-  placeholder="Tu nombre"
-  value={clienteNombre}
-  onChange={(e) => setClienteNombre(e.target.value)}
-  onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      confirmarPedido();
-    }
-  }}
-  className="border border-gray-300 rounded px-3 py-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-[#ff95ab]"
+<ModalPedido
+  mostrarModal={mostrarModal}
+  setMostrarModal={setMostrarModal}
+  cart={cart}
+  cartTotal={cartTotal}
+  clienteNombre={clienteNombre}
+  setClienteNombre={setClienteNombre}
+  metodoPago={metodoPago}
+  setMetodoPago={setMetodoPago}
+  confirmarPedido={confirmarPedido}
+  confirmando={confirmando}
 />
-<div className="mb-4">
-  <p className="text-orange-950 text-lg mb-1">Elegí tu forma de pago:</p>
-  <div className="flex justify-center gap-4">
-    <button
-      onClick={() => setMetodoPago('mercado_pago')}
-      className={`px-4 py-2 rounded-lg border-2 ${
-        metodoPago === 'mercado_pago'
-          ? 'bg-[#ff95ab] text-white border-[#ff95ab]'
-          : 'bg-white text-orange-950 border-orange-300'
-      }`}
-    >
-      Mercado Pago
-    </button>
-    <button
-      onClick={() => setMetodoPago('efectivo')}
-      className={`px-4 py-2 rounded-lg border-2 ${
-        metodoPago === 'efectivo'
-          ? 'bg-[#ff95ab] text-white border-[#ff95ab]'
-          : 'bg-white text-orange-950 border-orange-300'
-      }`}
-    >
-      Efectivo
-    </button>
-  </div>
-</div>
 
-<motion.button
-  whileTap={{ scale: confirmando ? 1 : 0.95 }}
-  onClick={confirmarPedido}
-  disabled={confirmando}
-  className={`${
-    confirmando ? "bg-gray-400 cursor-not-allowed" : "bg-[#ffa2b5] hover:bg-[#ff95ab]"
-  } text-white px-4 py-2 rounded transition w-full mt-2`}
->
-  
-  {confirmando ? "Confirmando..." : "Confirmar pedido"}
-</motion.button>
-</div>
-  </div>
-)}
 {mostrarBotonWhatsApp && (
-  <div className="fixed inset-0 z-50 backdrop-blur-sm bg-yellow-950/35 flex items-center justify-center">
-    <div className="bg-amber-100 rounded-xl pt-12  px-6 pb-6 w-11/12 max-w-md text-center shadow-lg relative">
-    <motion.button
-  whileTap={{ scale: 0.95 }}
-  onClick={() => {
-    setMostrarBotonWhatsApp(false);
-    setTimeout(() => {
-      setMostrarModalResena(true);
-    }, 300);
-  }}
-  className="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-full hover:bg-red-800 transition"
->
-  X
-</motion.button>
-
-
-      <h2 className="text-3xl font-bold text-orange-950 mb-1 lg:mb-2">¡Ya casi!</h2> 
-      <div className="bg-[#fff8de] border-2 border-yellow-900 rounded-lg px-4 py-3 my-4 shadow-sm text-left">
-  <p className="text-orange-950 text-lg mb-1">Transferí al siguiente alias:</p>
-  <button
-  onClick={() => {
-    navigator.clipboard.writeText("biteme.vcp");
-    setToast("Alias copiado 📋");
-  }}
-  className="text-2xl font-bold text-yellow-900 tracking-wide hover:underline focus:outline-none"
-  title="Copiar alias"
->
-  biteme.vcp
-</button>
-
-  <p className="text-orange-950 text-base mt-2">Titular: <span className="font-semibold">Olivia Iturrusgarai Ballés</span></p>
-</div>
-
-      <p className="text-base  text-orange-950 mb-1 lg:mb-2">y envianos el comprobante por whatsapp!</p>
-  <div className="flex items-center justify-center">
-    
-<a
-  href={obtenerLinkWhatsApp()}
-  target="_blank"
-  rel="noopener noreferrer"
-  onClick={() => {
-    const pedido = {
-      carrito: cart.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity
-      })),
-      total: cartTotal,
-      cliente: clienteNombre,
-       metodo: metodoPago,
-      fecha: Timestamp.fromDate(new Date()),
-      estado: "en proceso"
-    };
-
-    addDoc(collection(db, "pedidos"), pedido)
-      .then(() => {
-        setToast("Pedido confirmado 🎉");
-        setCart([]);
-        setClienteNombre('');
-        setMostrarBotonWhatsApp(false);
-        setMostrarModalResena(true);
-      })
-      .catch((error) => {
-        console.error("Error al guardar el pedido:", error);
-        setToast("Error al confirmar el pedido");
-      });
-  }}
->
-  <img className="h-12 sm:h-14" src="/img/whatsapp.png" alt="WhatsApp" />
-</a>
-
-
-
-  </div>
-  </div></div>
+  <ModalWhatsApp
+    cart={cart}
+    cartTotal={cartTotal}
+    clienteNombre={clienteNombre}
+    metodoPago={metodoPago}
+    obtenerLinkWhatsApp={obtenerLinkWhatsApp}
+    setMostrarBotonWhatsApp={setMostrarBotonWhatsApp}
+    setMostrarModalResena={setMostrarModalResena}
+    setToast={setToast}
+  />
 )}
 
 
@@ -392,16 +296,8 @@ cart={cart}
       <AnimatePresence>
       
   {toast && (
-    <motion.div
-      key="toast"
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 50 }}
-      transition={{ duration: 0.3 }}
-      className="fixed bottom-5 right-5 bg-[#4b2300] text-white px-4 py-2 rounded shadow-lg z-50"
-    >
-      {toast}
-    </motion.div>
+   <Toast message={toast} />
+    
   )}
 </AnimatePresence>
 {mostrarModalResena && (

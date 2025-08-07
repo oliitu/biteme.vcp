@@ -46,8 +46,9 @@ useEffect(() => {
       {mostrarCarrito && (
 <div
   id="carrito"
-  className="mt-0 absolute right-0 w-full max-w-sm sm:w-96 bg-[#fff8de] rounded shadow p-4 z-10"
+  className="mt-0 absolute right-0 max-w-sm  bg-[#fff8de] rounded shadow p-4 z-10 sm:w-auto max-h-[80vh] overflow-y-auto min-w-[200px]"
 >
+
   {isEmpty ? (
     <p className="text-center">El carrito está vacío</p>
   ) : (
