@@ -16,6 +16,8 @@ import Toast from './components/Toast';
 
 
 function App() {
+  const [linkWhatsApp, setLinkWhatsApp] = useState("");
+
   const [clienteNombre, setClienteNombre] = useState('');
   const [metodoPago, setMetodoPago] = useState('');
 
@@ -36,23 +38,20 @@ const [isStickyCart, setIsStickyCart] = useState(false);
   return () => window.removeEventListener("scroll", handleScroll);
 }, []);
 
-
-
-
- const generarMensajeWhatsApp = () => {
+const obtenerLinkWhatsApp = () => {
   if (!cart.length || !clienteNombre.trim()) return "";
 
   const lineaGalletas = cart
-    .map(item => `- ${item.name} x${item.quantity} = $${item.quantity * item.price}`)
+    .map(item => `- ${item.name} x${item.quantity} = $${(item.quantity * item.price).toFixed(2)}`)
     .join('\n');
 
-  return `Hola mamuuu, soy ${clienteNombre}. Te envío el comprobante de mi pedido:\n${lineaGalletas}\nTotal: $${cartTotal}`;
+  const mensaje = `Hola mamuuu, soy ${clienteNombre}. Te envío el comprobante de mi pedido:\n${lineaGalletas}\nTotal: $${cartTotal.toFixed(2)}`;
+
+  const numero = "5493541396868"; // sin + ni espacios
+  return `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
 };
 
-const obtenerLinkWhatsApp = () => {
-  const mensaje = generarMensajeWhatsApp();
-  return `https://wa.me/5493541396868?text=${encodeURIComponent(mensaje)}`;
-};
+
 
 const confirmarPedido = async () => {
   if (!cart.length || isNaN(cartTotal)) {
@@ -89,6 +88,9 @@ const confirmarPedido = async () => {
   try {
     await addDoc(collection(db, "pedidos"), pedido);
     setToast("Pedido confirmado 🎉");
+    const link = obtenerLinkWhatsApp(); // ✅ generás el link ANTES de vaciar carrito
+setLinkWhatsApp(link);
+
     setCart([]);
     setClienteNombre('');
 
@@ -276,17 +278,17 @@ cart={cart}
 />
 
 {mostrarBotonWhatsApp && (
-  <ModalWhatsApp
-    cart={cart}
-    cartTotal={cartTotal}
-    clienteNombre={clienteNombre}
-    metodoPago={metodoPago}
-    obtenerLinkWhatsApp={obtenerLinkWhatsApp}
-    setMostrarBotonWhatsApp={setMostrarBotonWhatsApp}
-    setMostrarModalResena={setMostrarModalResena}
-    setToast={setToast}
-  />
+  <>
+    {console.log("Link generado:", obtenerLinkWhatsApp())}
+    <ModalWhatsApp
+      linkWhatsApp={linkWhatsApp}
+      setMostrarBotonWhatsApp={setMostrarBotonWhatsApp}
+      setMostrarModalResena={setMostrarModalResena}
+      setToast={setToast}
+    />
+  </>
 )}
+
 
 
      <AccesoPedidos />

@@ -1,52 +1,31 @@
 import { motion } from "framer-motion";
-import { addDoc, collection, Timestamp } from "firebase/firestore";
-import { db } from "../firebase";
 
 export default function ModalWhatsApp({
-  cart,
-  cartTotal,
-  clienteNombre,
-  metodoPago,
-  obtenerLinkWhatsApp,
+  linkWhatsApp,
   setMostrarBotonWhatsApp,
   setMostrarModalResena,
   setToast
 }) {
-  const handleConfirmClick = () => {
-    const pedido = {
-      carrito: cart.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity
-      })),
-      total: cartTotal,
-      cliente: clienteNombre,
-      metodo: metodoPago,
-      fecha: Timestamp.fromDate(new Date()),
-      estado: "en proceso"
-    };
+  const handleWhatsAppClick = () => {
+    if (!linkWhatsApp) {
+      setToast("Error: enlace de WhatsApp inválido");
+      return;
+    }
 
-    addDoc(collection(db, "pedidos"), pedido)
-      .then(() => {
-        setToast("Pedido confirmado 🎉");
-        setMostrarBotonWhatsApp(false);
-        setMostrarModalResena(true);
-      })
-      .catch((error) => {
-        console.error("Error al guardar el pedido:", error);
-        setToast("Error al confirmar el pedido");
-      });
+    window.open(linkWhatsApp, "_blank");
+    setMostrarBotonWhatsApp(false);
+    setMostrarModalResena(true);
+    setToast("Pedido confirmado 🎉");
   };
 
   return (
     <div className="fixed inset-0 z-50 backdrop-blur-sm bg-yellow-950/35 flex items-center justify-center">
       <div className="bg-amber-100 rounded-xl pt-12 px-6 pb-6 w-11/12 max-w-md text-center shadow-lg relative">
-
         <motion.button
           whileTap={{ scale: 0.95 }}
-          onClick={handleConfirmClick}
+          onClick={() => setMostrarBotonWhatsApp(false)}
           className="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-full hover:bg-red-800 transition"
+          aria-label="Cerrar modal"
         >
           X
         </motion.button>
@@ -75,14 +54,13 @@ export default function ModalWhatsApp({
         </p>
 
         <div className="flex items-center justify-center">
-          <a
-            href={obtenerLinkWhatsApp()}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={handleConfirmClick}
+          <button
+            onClick={handleWhatsAppClick}
+            className="focus:outline-none"
+            aria-label="Enviar pedido por WhatsApp"
           >
             <img className="h-12 sm:h-14" src="/img/whatsapp.png" alt="WhatsApp" />
-          </a>
+          </button>
         </div>
       </div>
     </div>
