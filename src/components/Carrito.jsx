@@ -1,6 +1,5 @@
-import { motion } from "framer-motion"; 
 import { useState, useRef, useEffect } from "react";
-
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Carrito({ cart, cartTotal, removeFromCart, increaseQuantity, decreaseQuantity, clearCart, setMostrarModal, isStickyCart, }) {
 const isEmpty = cart.length === 0;
@@ -30,18 +29,35 @@ useEffect(() => {
   onMouseLeave={() => {
     if (window.innerWidth >= 640) setMostrarCarrito(false);
   }}>
-<div
-  className="bg-yellow-900 p-2 sm:p-4 rounded-full cursor-pointer"
-   onClick={() => {
-      if (window.innerWidth < 640) setMostrarCarrito(prev => !prev);
-    }}
+  <div
+  className="relative bg-yellow-900 p-2 sm:p-4 rounded-full cursor-pointer"
+  onClick={() => {
+    if (window.innerWidth < 640) setMostrarCarrito(prev => !prev);
+  }}
 >
   <img
     src="/img/carrito.png"
     alt="imagen carrito"
     className="w-6 md:w-9 lg:w-15 drop-shadow-4xl object-contain"
   />
+
+  {/* Badge con animación */}
+  <AnimatePresence mode="popLayout">
+    {cart.length > 0 && (
+      <motion.span
+        key={cart.reduce((total, item) => total + item.quantity, 0)}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0 }}
+        transition={{ type: "spring", stiffness: 500, damping: 15 }}
+        className="absolute -top-1 -left-1 bg-[#ff2ba3] text-white sm:text-base text-xs font-bold rounded-full w-4 sm:w-7 h-4 sm:h-7 flex items-center justify-center"
+      >
+        {cart.reduce((total, item) => total + item.quantity, 0)}
+      </motion.span>
+    )}
+  </AnimatePresence>
 </div>
+
 
       {mostrarCarrito && (
 <div
