@@ -98,15 +98,21 @@ setLinkWhatsApp(link);
     let totalAgus = 0;
     let totalOli = 0;
     let totalGuada = 0;
-
+    const totalGalletas = cart.reduce((acc, item) => acc + item.quantity, 0);
     cart.forEach(item => {
-      const subtotal = item.price * item.quantity;
-      if (item.id === 1 || item.id === 5) totalAgus += subtotal;
-      if (item.id === 2 || item.id === 3) totalOli += subtotal;
-      if (item.id === 4 || item.id === 6) totalGuada += subtotal;
-    });
+  let precioUnitario = item.price;
 
-    // ✅ Sumar a Firestore usando setDoc con merge: true
+  // 🔹 Si son exactamente 3 galletas en el pedido → precio promo (2000)
+  if (totalGalletas === 3) {
+    precioUnitario = 2000;
+  }
+
+  const subtotal = precioUnitario * item.quantity;
+
+  if (item.id === 1 || item.id === 5) totalAgus += subtotal;
+  if (item.id === 2 || item.id === 3) totalOli += subtotal;
+  if (item.id === 4 || item.id === 6) totalGuada += subtotal;
+});
     const totalesRef = collection(db, "totalesPorChica");
 
     if (totalAgus > 0) {
@@ -129,9 +135,6 @@ setLinkWhatsApp(link);
     setToast("Error al confirmar el pedido");
   }
 };
-
-
-
 
   const [toast, setToast] = useState('');
   useEffect(() => {
