@@ -36,9 +36,9 @@ export const db = [
     },
     {
         id: 6,
-        name: 'Brownie',
-        image: 'brownie',
-        description: 'cookie sabor brownie.',
+        name: 'Oreo',
+        image: 'oreo',
+        description: 'cookie con pedazos de oreo.',
         price: 2499,
     },
     
