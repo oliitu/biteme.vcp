@@ -252,7 +252,7 @@ cart={cart}
       <section  className="align-items-center pt-10 lg:pt-20 pb-4 lg:pb-16 px-6">
   <div className="max-w-6xl mx-auto text-center mb-7 lg:mb-13">
     <h2 className="text-3xl md:text-5xl lg:text-7xl font-pacifico text-orange-950 mb-2 lg:mb-5">Nuestras Cookies</h2>
-    <p className="text-lg lg:text-xl font-poppins text-orange-950">Elegí tu favorita y llevate 3 por $6000</p>
+    <p className="text-lg lg:text-xl font-poppins text-orange-950">Elegí tu promo en nuestro instagram</p>
   </div>
 
   <div className="grid grid-cols-2  md:grid-cols-3 lg:grid-cols-3  lg:gap-y-10 lg:gap-x-8 gap-2  sm:gap-y-3 md:m-1 sm:mx-4 justify-items-center lg:mx-12">
